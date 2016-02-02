@@ -20,6 +20,26 @@
 
 #include "ComputeDotProduct.hpp"
 #include "ComputeDotProduct_ref.hpp"
+#include <cassert>
+
+  class Dotproduct {
+
+    private:
+    const_double_1d_type  xv;
+    const_double_1d_type  yv;
+
+    public:
+    typedef double value_type;
+    Dotproduct(const double_1d_type  & xValues,const double_1d_type  & yValues){
+      xv = xValues;
+      yv = yValues;
+    }
+    KOKKOS_INLINE_FUNCTION
+    void operator()(local_int_t i, double &final)const{
+    final += xv(i) * yv(i);
+    }
+
+  };
 
 /*!
   Routine to compute the dot product of two vectors.
@@ -40,8 +60,33 @@
 */
 int ComputeDotProduct(const local_int_t n, const Vector & x, const Vector & y,
     double & result, double & time_allreduce, bool & isOptimized) {
+  
+    if(x.optimizationData == 0 || y.optimizationData == 0){
+      isOptimized = false;
+      return(ComputeDotProduct_ref(n,x,y,result,time_allreduce));
+    }
 
   // This line and the next two lines should be removed and your version of ComputeDotProduct should be used.
-  isOptimized = false;
-  return ComputeDotProduct_ref(n, x, y, result, time_allreduce);
+  assert(x.localLength >= n);
+  assert(y.localLength >= n);
+
+  Optivector * x_optimized = (Optivector*) x.optimizationData;
+  double_1d_type x_values = x_optimized->values;
+  Optivector * y_optimized = (Optivector*) y.optimizationData;
+  double_1d_type y_values = y_optimized->values;
+
+  double local_result = 0.0;
+  Kokkos::parallel_reduce(n,Dotproduct(x_values, y_values), local_result);
+
+  #ifndef HPCG_NOMPI
+    double t0  = mytimer();
+    double global_result = 0.0;
+    MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    result = global_result;
+    time_allreduce += mytimer() - t0;
+  #else
+    result = local_result;
+  #endif
+
+    return(0);
 }

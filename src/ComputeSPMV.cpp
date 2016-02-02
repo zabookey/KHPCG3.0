@@ -40,6 +40,26 @@
 int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 
   // This line and the next two lines should be removed and your version of ComputeSPMV should be used.
-  A.isSpmvOptimized = false;
-  return ComputeSPMV_ref(A, x, y);
+  if(A.optimizationData == 0 || x.optimizationData == 0 || y.optimizationData == 0){
+    A.isSpmvOptimized = false;
+    return ComputeSPMV_ref(A,x,y);
+  }
+  std::cout<<"SPMV"<<std::endl;
+  assert(x.localLength >= A.localNumberOfColumns);
+  assert(y.localLength >= A.localNumberOfRows);
+
+  #ifndef HPCG_NOMPI
+    ExchangeHalo(A,x);
+  #endif
+
+    Optimatrix * A_optimized = (Optimatrix*) A.optimizationData;
+    local_matrix_type localMatrix = A_optimized->localMatrix;
+    Optivector * x_optimized = (Optivector*) x.optimizationData;
+    double_1d_type x_values = x_optimized->values;
+    Optivector * y_optimized = (Optivector*) y.optimizationData;
+    double_1d_type y_values = y_optimized->values;
+
+
+    KokkosSparse::spmv("N", 1.0, localMatrix, x_values, 0.0, y_values);
+    return(0);
 }

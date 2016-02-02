@@ -40,7 +40,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
   // This function can be used to completely transform any part of the data structures.
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
 
-	OptimizeMatrix(A); std::cout<<"HERE"<<std::endl;
+	OptimizeMatrix(A);
 	OptimizeVector(b);
 	OptimizeVector(x);
 	OptimizeVector(xexact);
@@ -143,7 +143,6 @@ void OptimizeMatrix(SparseMatrix & A){
 	optimized.localMatrix = localMatrix;
 	optimized.globalMatrix = globalMatrix;
 	A.optimizationData = &optimized;
-  std::cout<<"HERE"<<std::endl;
 }
 
 void OptimizeVector(Vector & v){
