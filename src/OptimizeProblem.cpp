@@ -19,6 +19,7 @@
  */
 
 #include "OptimizeProblem.hpp"
+#include <iostream>
 /*!
   Optimizes the data structures used for CG iteration to increase the
   performance of the benchmark version of the preconditioned CG algorithm.
@@ -39,7 +40,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
   // This function can be used to completely transform any part of the data structures.
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
 
-	OptimizeMatrix(A);
+	OptimizeMatrix(A); std::cout<<"HERE"<<std::endl;
 	OptimizeVector(b);
 	OptimizeVector(x);
 	OptimizeVector(xexact);
@@ -138,10 +139,11 @@ void OptimizeMatrix(SparseMatrix & A){
 	global_matrix_type globalMatrix = global_matrix_type("Matrix: Global", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, gIndexMap);
 	local_matrix_type localMatrix = local_matrix_type("Matrix: Local", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, lIndexMap);
 	//Create the optimatrix structure and assign it to A
-	Optimatrix* optimized;
-	optimized->localMatrix = localMatrix;
-	optimized->globalMatrix = globalMatrix;
-	A.optimizationData = optimized;
+	Optimatrix optimized;
+	optimized.localMatrix = localMatrix;
+	optimized.globalMatrix = globalMatrix;
+	A.optimizationData = &optimized;
+  std::cout<<"HERE"<<std::endl;
 }
 
 void OptimizeVector(Vector & v){
@@ -152,7 +154,7 @@ void OptimizeVector(Vector & v){
 	}
 	Kokkos::deep_copy(values, host_values);
 	//Create the optivector structure and assign it to v
-	Optivector* optimized;
-	optimized->values = values;
-	v.optimizationData = optimized;
+	Optivector optimized;
+	optimized.values = values;
+	v.optimizationData = &optimized;
 }

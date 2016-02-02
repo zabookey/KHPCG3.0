@@ -72,6 +72,8 @@ using std::endl;
 */
 int main(int argc, char * argv[]) {
 
+  Kokkos::initialize(argc, argv);
+
 #ifndef HPCG_NO_MPI
   MPI_Init(&argc, &argv);
 #endif
@@ -229,9 +231,7 @@ int main(int argc, char * argv[]) {
 
   // Call user-tunable set up function.
   double t7 = mytimer();
-  std::cout<<"HERE"<<std::endl;
   OptimizeProblem(A, data, b, x, xexact);
-  std::cout<<"HERE"<<std::endl;
   t7 = mytimer() - t7;
   times[7] = t7;
 #ifdef HPCG_DEBUG
@@ -380,5 +380,7 @@ int main(int argc, char * argv[]) {
 #ifndef HPCG_NO_MPI
   MPI_Finalize();
 #endif
+
+  Kokkos::finalize();
   return 0;
 }
