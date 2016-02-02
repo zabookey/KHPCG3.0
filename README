@@ -1,0 +1,37 @@
+###############################
+HPCG with Kokkos Implementation
+###############################
+
+Introduction
+============
+
+Write Introduction here
+
+
+Installation
+============
+
+Install requirements:
+-Valid install of trilinos with Kokkos and Tpetra packages enabled.
+	(Tpetra requirement will be removed when KokkosCrsMatrix is moved out of Tpetra)
+-CMake Version 2.8 or newer (Looking into making it a lower version)
+-OpenMP (Not directly used but Kokkos can use this.)
+
+To Install:
+-In the top level CMakeLists file you need to change the Trilinos_PREFIX
+  to the PREFIX you used to install trilinos.
+-In the top level CMakeLists file you need to change the Definition towards the bottom to
+	specify where you want the execution_space to be set to
+-For out of source build, call cmake <location_of_top_level_HPCG> 
+  from the directory you'd like to build from
+-DONT FORGET THE FLAG -KOKKOS_OPENMP = ON or -KOKKOS_CUDA = ON if you forget it runs with Kokkos::Serial
+-For in source build, call cmake .
+-Then call make and this should build everything. The executable KokkosHPCG.exe
+  will be located in the src directory
+
+Known Issues
+============
+
+Top Priority
+
+-Changing SYMGS to use a different preconditioner..
