@@ -39,6 +39,11 @@ struct Vector_STRUCT {
 };
 typedef struct Vector_STRUCT Vector;
 
+struct Optivector_STRUCT{
+  double_1d_type values;
+};
+typedef struct Optivector_STRUCT Optivector;
+
 /*!
   Initializes input vector.
 
@@ -112,12 +117,8 @@ inline void DeleteVector(Vector & v) {
 
   delete [] v.values;
   v.localLength = 0;
+  if(v.optimizationData != 0){delete (Optivector*) v.optimizationData; v.optimizationData = 0;}
   return;
 }
-
-struct Optivector_STRUCT{
-	double_1d_type values;
-};
-typedef struct Optivector_STRUCT Optivector;
 
 #endif // VECTOR_HPP

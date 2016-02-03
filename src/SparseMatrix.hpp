@@ -70,6 +70,11 @@ struct SparseMatrix_STRUCT {
 };
 typedef struct SparseMatrix_STRUCT SparseMatrix;
 
+struct Optimatrix_STRUCT{
+  local_matrix_type localMatrix;
+  global_matrix_type globalMatrix;
+};
+typedef struct Optimatrix_STRUCT Optimatrix;
 /*!
   Initializes the known system matrix data structure members to 0.
 
@@ -166,15 +171,12 @@ inline void DeleteMatrix(SparseMatrix & A) {
 #endif
 
   if (A.geom!=0) { delete A.geom; A.geom = 0;}
+  if (A.optimizationData != 0) {delete (Optimatrix*) A.optimizationData; A.optimizationData = 0;}
   if (A.Ac!=0) { DeleteMatrix(*A.Ac); delete A.Ac; A.Ac = 0;} // Delete coarse matrix
   if (A.mgData!=0) { DeleteMGData(*A.mgData); delete A.mgData; A.mgData = 0;} // Delete MG data
   return;
 }
 
-struct Optimatrix_STRUCT{
-	local_matrix_type localMatrix;
-	global_matrix_type globalMatrix;
-};
-typedef struct Optimatrix_STRUCT Optimatrix;
+
 
 #endif // SPARSEMATRIX_HPP

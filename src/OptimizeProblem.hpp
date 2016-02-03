@@ -33,4 +33,8 @@ void OptimizeMatrix(SparseMatrix & A);
 
 void OptimizeVector(Vector & v);
 
+void OptimizeCGData(CGData & data);
+
+void OptimizeMGData(MGData & data);
+
 #endif  // OPTIMIZEPROBLEM_HPP

@@ -39,8 +39,8 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 
   // This function can be used to completely transform any part of the data structures.
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
-
 	OptimizeMatrix(A);
+  OptimizeCGData(data);
 	OptimizeVector(b);
 	OptimizeVector(x);
 	OptimizeVector(xexact);
@@ -101,6 +101,7 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
     colors[i] = counters[colors[i]]++;
 #endif
 
+  if(A.Ac != 0)
   return 0;
 }
 
@@ -130,7 +131,8 @@ void OptimizeMatrix(SparseMatrix & A){
 			host_gIndexMap(index) = A.mtxIndG[i][j];
 			index++;
 		}
-		host_rowMap(i+1) = host_rowMap(i) + A.nonzerosInRow[i];
+		//host_rowMap(i+1) = host_rowMap(i) + A.nonzerosInRow[i];
+    host_rowMap(i+1) = index;
 	}
 	Kokkos::deep_copy(values, host_values);
 	Kokkos::deep_copy(gIndexMap, host_gIndexMap);
@@ -139,10 +141,14 @@ void OptimizeMatrix(SparseMatrix & A){
 	global_matrix_type globalMatrix = global_matrix_type("Matrix: Global", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, gIndexMap);
 	local_matrix_type localMatrix = local_matrix_type("Matrix: Local", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, lIndexMap);
 	//Create the optimatrix structure and assign it to A
-	Optimatrix optimized;
-	optimized.localMatrix = localMatrix;
-	optimized.globalMatrix = globalMatrix;
-	A.optimizationData = &optimized;
+	Optimatrix* optimized = new Optimatrix;
+	optimized->localMatrix = localMatrix;
+	optimized->globalMatrix = globalMatrix;
+	A.optimizationData = optimized;
+  if(A.Ac!=0){
+    OptimizeMGData(*A.mgData);
+    OptimizeMatrix(*A.Ac);
+  }
 }
 
 void OptimizeVector(Vector & v){
@@ -153,7 +159,20 @@ void OptimizeVector(Vector & v){
 	}
 	Kokkos::deep_copy(values, host_values);
 	//Create the optivector structure and assign it to v
-	Optivector optimized;
-	optimized.values = values;
-	v.optimizationData = &optimized;
+	Optivector* optimized = new Optivector;
+	optimized->values = values;
+	v.optimizationData = optimized;
+}
+
+void OptimizeCGData(CGData & data){
+  OptimizeVector(data.r);
+  OptimizeVector(data.z);
+  OptimizeVector(data.p);
+  OptimizeVector(data.Ap);
+}
+
+void OptimizeMGData(MGData & data){
+  OptimizeVector(*data.rc);
+  OptimizeVector(*data.xc);
+  OptimizeVector(*data.Axf);
 }
