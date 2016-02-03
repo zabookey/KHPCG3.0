@@ -21,6 +21,57 @@
 #include "ComputeWAXPBY.hpp"
 #include "ComputeWAXPBY_ref.hpp"
 
+ class Waxpby {
+		public:
+		const_double_1d_type xv;
+		const_double_1d_type yv;
+		double_1d_type wv;
+		double alpha;
+		double beta;
+
+		Waxpby(const double_1d_type &xv_,const double_1d_type &yv_, double_1d_type &wv_,const double alpha_,const double beta_):
+			xv(xv_), yv(yv_), wv(wv_), alpha(alpha_), beta(beta_)
+			{}
+		KOKKOS_INLINE_FUNCTION
+		void operator() (const int& i)const{
+			wv(i) = alpha * xv(i) + beta * yv(i);
+		}
+	};
+
+	class AlphaOne {
+		public:
+		const_double_1d_type xv;
+		const_double_1d_type yv;
+		double_1d_type wv;
+		double beta;
+	
+		AlphaOne(const double_1d_type &xv_, const double_1d_type &yv_, double_1d_type &wv_, const double beta_):
+			xv(xv_), yv(yv_), wv(wv_), beta(beta_)
+			{}
+
+		KOKKOS_INLINE_FUNCTION
+		void operator() (const int& i)const{
+			wv(i) = xv(i) + beta * yv(i);
+		}
+	};
+
+	class BetaOne {
+		public:
+		const_double_1d_type xv;
+		const_double_1d_type yv;
+		double_1d_type wv;
+		double alpha;
+	
+		BetaOne(const double_1d_type &xv_, const double_1d_type &yv_, double_1d_type &wv_, const double alpha_):
+			xv(xv_), yv(yv_), wv(wv_), alpha(alpha_)
+			{}
+
+		KOKKOS_INLINE_FUNCTION
+		void operator() (const int& i)const{
+			wv(i) = alpha * xv(i) + yv(i);
+		}
+	};
+
 /*!
   Routine to compute the update of a vector with the sum of two
   scaled vectors where: w = alpha*x + beta*y
@@ -43,6 +94,25 @@ int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
     const double beta, const Vector & y, Vector & w, bool & isOptimized) {
 
   // This line and the next two lines should be removed and your version of ComputeWAXPBY should be used.
-  isOptimized = false;
-  return ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
+  if(x.optimizationData == 0 || y.optimizationData == 0 || w.optimizationData == 0){
+    isOptimized = false;
+    return ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
+  }
+  assert(x.localLength >= n);
+  assert(y.localLength >= n);
+
+  Optivector * x_optimized = (Optivector*) x.optimizationData;
+  Optivector * y_optimized = (Optivector*) y.optimizationData;
+  Optivector * w_optimized = (Optivector*) w.optimizationData;
+  double_1d_type x_values = x_optimized->values;
+  double_1d_type y_values = y_optimized->values;
+  double_1d_type w_values = w_optimized->values;
+
+  if(alpha == 1.0)
+  	Kokkos::parallel_for(n, AlphaOne(x_values, y_values, w_values, beta));
+  else if(beta == 1.0)
+  	Kokkos::parallel_for(n, BetaOne(x_values, y_values, w_values, alpha));
+  else
+  	Kokkos::parallel_for(n, Waxpby(x_values, y_values, w_values, alpha, beta));
+
 }

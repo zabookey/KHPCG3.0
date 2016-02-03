@@ -44,7 +44,6 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
     A.isSpmvOptimized = false;
     return ComputeSPMV_ref(A,x,y);
   }
-  std::cout<<"SPMV"<<std::endl;
   assert(x.localLength >= A.localNumberOfColumns);
   assert(y.localLength >= A.localNumberOfRows);
 
