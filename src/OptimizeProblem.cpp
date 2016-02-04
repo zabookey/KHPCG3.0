@@ -123,6 +123,8 @@ void OptimizeMatrix(SparseMatrix & A){
 	host_non_const_row_map_type host_rowMap = Kokkos::create_mirror_view(rowMap);
   local_int_1d_type matrixDiagonal("Matrix Diagonal", A.localNumberOfRows);
   host_local_int_1d_type host_matrixDiagonal = Kokkos::create_mirror_view(matrixDiagonal);
+	local_int_1d_type f2cOperator("f2cOperator", A.localNumberOfRows);
+	host_local_int_1d_type host_f2cOperator = Kokkos::create_mirror_view(f2cOperator);
 	local_int_t index = 0;
 	host_rowMap(0) = 0;
 //TODO Make this parallel so I don't need to use mirrors and copies
@@ -130,31 +132,37 @@ void OptimizeMatrix(SparseMatrix & A){
 		for(int j = 0; j < A.nonzerosInRow[i]; j++){
 			host_values(index) = A.matrixValues[i][j];
 			host_lIndexMap(index) = A.mtxIndL[i][j];
-      if(host_lIndexMap(index) == i)
-        host_matrixDiagonal(i) = index;
+			if(host_lIndexMap(index) == i)
+				host_matrixDiagonal(i) = index;
 			host_gIndexMap(index) = A.mtxIndG[i][j];
 			index++;
 		}
 		//host_rowMap(i+1) = host_rowMap(i) + A.nonzerosInRow[i];
-    host_rowMap(i+1) = index;
+		host_rowMap(i+1) = index;
 	}
 	Kokkos::deep_copy(values, host_values);
 	Kokkos::deep_copy(gIndexMap, host_gIndexMap);
 	Kokkos::deep_copy(lIndexMap, host_lIndexMap);
 	Kokkos::deep_copy(rowMap, host_rowMap);
-  Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
+	Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
 	global_matrix_type globalMatrix = global_matrix_type("Matrix: Global", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, gIndexMap);
 	local_matrix_type localMatrix = local_matrix_type("Matrix: Local", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, lIndexMap);
 	//Create the optimatrix structure and assign it to A
 	Optimatrix* optimized = new Optimatrix;
 	optimized->localMatrix = localMatrix;
 	optimized->globalMatrix = globalMatrix;
-  optimized->matrixDiagonal = matrixDiagonal;
+	optimized->matrixDiagonal = matrixDiagonal;
 	A.optimizationData = optimized;
-  if(A.Ac!=0){
-    OptimizeMGData(*A.mgData);
-    OptimizeMatrix(*A.Ac);
-  }
+	if(A.Ac!=0){
+		local_int_t * f2c = A.mgData->f2cOperator;
+		for(int i = 0; i < A.localNumberOfRows; i++){
+			host_f2cOperator(i) = f2c[i];
+		}
+		Kokkos::deep_copy(f2cOperator, host_f2cOperator);
+		optimized->f2cOperator = f2cOperator;
+		OptimizeMGData(*A.mgData);
+		OptimizeMatrix(*A.Ac);
+	}
 }
 
 void OptimizeVector(Vector & v){

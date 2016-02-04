@@ -74,6 +74,7 @@ struct Optimatrix_STRUCT{
   local_matrix_type localMatrix;
   global_matrix_type globalMatrix;
   local_int_1d_type matrixDiagonal; // values(matrixDiagonal(i)) will return value on diagonal of row i.
+  local_int_1d_type f2cOperator; // Use this instead of the one in MGData so it can be used in Kokkos kernels.
 };
 typedef struct Optimatrix_STRUCT Optimatrix;
 /*!

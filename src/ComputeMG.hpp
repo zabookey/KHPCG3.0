@@ -16,7 +16,11 @@
 #define COMPUTEMG_HPP
 #include "SparseMatrix.hpp"
 #include "Vector.hpp"
+#include "KokkosSetup.hpp"
 
 int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x);
 
+int ComputeRestriction(const SparseMatrix & A, const Vector & rf);
+
+int ComputeProlongation(const SparseMatrix &Af, Vector & xf);
 #endif // COMPUTEMG_HPP
