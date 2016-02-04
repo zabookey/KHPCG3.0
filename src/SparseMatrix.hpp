@@ -73,6 +73,7 @@ typedef struct SparseMatrix_STRUCT SparseMatrix;
 struct Optimatrix_STRUCT{
   local_matrix_type localMatrix;
   global_matrix_type globalMatrix;
+  local_int_1d_type matrixDiagonal; // values(matrixDiagonal(i)) will return value on diagonal of row i.
 };
 typedef struct Optimatrix_STRUCT Optimatrix;
 /*!

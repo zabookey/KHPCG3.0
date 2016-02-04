@@ -121,6 +121,8 @@ void OptimizeMatrix(SparseMatrix & A){
 	host_local_index_type host_lIndexMap = Kokkos::create_mirror_view(lIndexMap);
 	non_const_row_map_type rowMap("CrsMatrix: RowMap", A.localNumberOfRows+1);
 	host_non_const_row_map_type host_rowMap = Kokkos::create_mirror_view(rowMap);
+  local_int_1d_type matrixDiagonal("Matrix Diagonal", A.localNumberOfRows);
+  host_local_int_1d_type host_matrixDiagonal = Kokkos::create_mirror_view(matrixDiagonal);
 	local_int_t index = 0;
 	host_rowMap(0) = 0;
 //TODO Make this parallel so I don't need to use mirrors and copies
@@ -128,6 +130,8 @@ void OptimizeMatrix(SparseMatrix & A){
 		for(int j = 0; j < A.nonzerosInRow[i]; j++){
 			host_values(index) = A.matrixValues[i][j];
 			host_lIndexMap(index) = A.mtxIndL[i][j];
+      if(host_lIndexMap(index) == i)
+        host_matrixDiagonal(i) = index;
 			host_gIndexMap(index) = A.mtxIndG[i][j];
 			index++;
 		}
@@ -138,12 +142,14 @@ void OptimizeMatrix(SparseMatrix & A){
 	Kokkos::deep_copy(gIndexMap, host_gIndexMap);
 	Kokkos::deep_copy(lIndexMap, host_lIndexMap);
 	Kokkos::deep_copy(rowMap, host_rowMap);
+  Kokkos::deep_copy(matrixDiagonal, host_matrixDiagonal);
 	global_matrix_type globalMatrix = global_matrix_type("Matrix: Global", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, gIndexMap);
 	local_matrix_type localMatrix = local_matrix_type("Matrix: Local", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, values, rowMap, lIndexMap);
 	//Create the optimatrix structure and assign it to A
 	Optimatrix* optimized = new Optimatrix;
 	optimized->localMatrix = localMatrix;
 	optimized->globalMatrix = globalMatrix;
+  optimized->matrixDiagonal = matrixDiagonal;
 	A.optimizationData = optimized;
   if(A.Ac!=0){
     OptimizeMGData(*A.mgData);
