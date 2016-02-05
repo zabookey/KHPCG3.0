@@ -35,6 +35,7 @@ using std::endl;
 #include "TestCG.hpp"
 #include "CG.hpp"
 
+#include "OptimizeProblem.hpp" //TODO Ask if it's okay to call OptimizeVector here instead of including it elsewhere.
 /*!
   Test the correctness of the Preconditined CG implementation by using a system matrix with a dominant diagonal.
 
@@ -59,6 +60,11 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
   InitializeVector(origDiagA, A.localNumberOfRows);
   InitializeVector(exaggeratedDiagA, A.localNumberOfRows);
   InitializeVector(origB, A.localNumberOfRows);
+//TODO SAME AS ABOVE	
+	OptimizeVector(origDiagA);
+	OptimizeVector(exaggeratedDiagA);
+	OptimizeVector(origB);
+
   CopyMatrixDiagonal(A, origDiagA);
   CopyVector(origDiagA, exaggeratedDiagA);
   CopyVector(b, origB);

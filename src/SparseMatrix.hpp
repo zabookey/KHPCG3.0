@@ -129,6 +129,26 @@ inline void CopyMatrixDiagonal(SparseMatrix & A, Vector & diagonal) {
     double * dv = diagonal.values;
     assert(A.localNumberOfRows==diagonal.localLength);
     for (local_int_t i=0; i<A.localNumberOfRows; ++i) dv[i] = *(curDiagA[i]);
+		if(A.optimizationData != 0){
+			Optimatrix * A_Optimized = (Optimatrix *) A.optimizationData;
+			local_matrix_type A_localMatrix = A_Optimized->localMatrix;
+			host_values_type host_A_Values = Kokkos::create_mirror_view(A_localMatrix.values);
+			local_int_1d_type A_diagonal_entries = A_Optimized->matrixDiagonal;
+			host_local_int_1d_type host_A_diag_entries = Kokkos::create_mirror_view(A_diagonal_entries);
+			Kokkos::deep_copy(host_A_Values, A_localMatrix.values);
+			Kokkos::deep_copy(host_A_diag_entries, A_diagonal_entries);
+			if(diagonal.optimizationData != 0){
+				Optivector * diagonal_Optimized = (Optivector *) diagonal.optimizationData;
+				double_1d_type d_values = diagonal_Optimized->values;
+				host_double_1d_type host_d_values = Kokkos::create_mirror_view(d_values);
+				Kokkos::deep_copy(host_d_values, d_values);
+				for(local_int_t i = 0; i < A.localNumberOfRows; ++i)
+					host_d_values(i) = host_A_Values(host_A_diag_entries(i));
+				Kokkos::deep_copy(d_values, host_d_values);
+			}
+			for(local_int_t i = 0; i < A.localNumberOfRows; ++i)
+				dv[i] = host_A_Values(host_A_diag_entries(i));
+		}
   return;
 }
 /*!
@@ -142,6 +162,27 @@ inline void ReplaceMatrixDiagonal(SparseMatrix & A, Vector & diagonal) {
     double * dv = diagonal.values;
     assert(A.localNumberOfRows==diagonal.localLength);
     for (local_int_t i=0; i<A.localNumberOfRows; ++i) *(curDiagA[i]) = dv[i];
+		if(A.optimizationData != 0){
+			Optimatrix * A_Optimized = (Optimatrix *) A.optimizationData;
+			local_matrix_type A_localMatrix = A_Optimized->localMatrix;
+			host_values_type host_A_values = Kokkos::create_mirror_view(A_localMatrix.values);
+			local_int_1d_type A_diagonal_entries = A_Optimized->matrixDiagonal;
+			host_local_int_1d_type host_A_diag_entries = Kokkos::create_mirror_view(A_diagonal_entries);
+			Kokkos::deep_copy(host_A_values, A_localMatrix.values);
+			Kokkos::deep_copy(host_A_diag_entries, A_diagonal_entries);
+			if(diagonal.optimizationData != 0){
+				Optivector * diagonal_Optimized = (Optivector *) diagonal.optimizationData;
+				double_1d_type d_values = diagonal_Optimized->values;
+				host_double_1d_type host_d_values = Kokkos::create_mirror_view(d_values);
+				Kokkos::deep_copy(host_d_values, d_values);
+				for(local_int_t i = 0; i < A.localNumberOfRows; ++i)
+					host_A_values(host_A_diag_entries(i)) = host_d_values(i);
+			} else {
+				for(local_int_t i = 0; i < A.localNumberOfRows; ++i)
+					host_A_values(host_A_diag_entries(i)) = dv[i];
+			}
+			Kokkos::deep_copy(A_localMatrix.values, host_A_values);
+		}
   return;
 }
 /*!

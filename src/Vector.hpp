@@ -66,6 +66,11 @@ inline void ZeroVector(Vector & v) {
   local_int_t localLength = v.localLength;
   double * vv = v.values;
   for (int i=0; i<localLength; ++i) vv[i] = 0.0;
+	//TODO Check if this is legal
+	if(v.optimizationData != 0){
+		Optivector * v_Optimized = (Optivector *) v.optimizationData;
+		Kokkos::deep_copy(v_Optimized->values, 0.0);
+	}
   return;
 }
 /*!
@@ -79,6 +84,13 @@ inline void ScaleVectorValue(Vector & v, local_int_t index, double value) {
   assert(index>=0 && index < v.localLength);
   double * vv = v.values;
   vv[index] *= value;
+	if(v.optimizationData != 0){
+		Optivector * v_Optimized = (Optivector *) v.optimizationData;
+		double_1d_type v_values = v_Optimized->values;
+		host_double_1d_type host_v_values = Kokkos::create_mirror_view(v_values);
+		host_v_values(index) *= value;
+		Kokkos::deep_copy(v_values, host_v_values);
+	}
   return;
 }
 /*!
@@ -104,6 +116,20 @@ inline void CopyVector(const Vector & v, Vector & w) {
   double * vv = v.values;
   double * wv = w.values;
   for (int i=0; i<localLength; ++i) wv[i] = vv[i];
+	if(v.optimizationData != 0 &&  w.optimizationData != 0){
+		std::cout<<"OPTIMIZED COPY"<<std::endl;
+		Optivector * v_Optimized = (Optivector *) v.optimizationData;
+		double_1d_type v_Values = v_Optimized->values;
+		host_double_1d_type host_v_Values = Kokkos::create_mirror_view(v_Values);
+		Kokkos::deep_copy(host_v_Values, v_Values);
+		Optivector * w_Optimized = (Optivector *) w.optimizationData;
+		double_1d_type w_Values = w_Optimized->values;
+		host_double_1d_type host_w_Values = Kokkos::create_mirror_view(w_Values);
+		Kokkos::deep_copy(host_w_Values, w_Values);
+		for(int i = 0; i < localLength; ++i)
+			host_w_Values(i) = host_v_Values(i);
+		Kokkos::deep_copy(w_Values, host_w_Values);
+	}
   return;
 }
 
