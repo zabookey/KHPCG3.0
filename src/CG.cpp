@@ -94,7 +94,6 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
 
   // Record initial residual for convergence testing
   normr0 = normr;
-
   // Start iterations
 
   for (int k=1; k<=max_iter && normr/normr0 > tolerance; k++ ) {

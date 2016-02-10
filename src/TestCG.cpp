@@ -52,7 +52,6 @@ using std::endl;
  */
 int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData & testcg_data) {
 
-
   // Use this array for collecting timing information
   std::vector< double > times(8,0.0);
   // Temporary storage for holding original diagonal and RHS
@@ -124,6 +123,5 @@ int TestCG(SparseMatrix & A, CGData & data, Vector & b, Vector & x, TestCGData &
   DeleteVector(exaggeratedDiagA);
   DeleteVector(origB);
   testcg_data.normr = normr;
-
   return 0;
 }

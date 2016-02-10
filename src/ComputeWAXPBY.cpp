@@ -114,5 +114,5 @@ int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
   	Kokkos::parallel_for(n, BetaOne(x_values, y_values, w_values, alpha));
   else
   	Kokkos::parallel_for(n, Waxpby(x_values, y_values, w_values, alpha, beta));
-
+	return(0);
 }

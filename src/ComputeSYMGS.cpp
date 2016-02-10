@@ -105,5 +105,5 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
   }
   //Copy the updated x data on the host back to the device.
   Kokkos::deep_copy(x_values, host_x_values);
-
+	return(0);
 }

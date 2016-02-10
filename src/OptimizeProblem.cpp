@@ -101,7 +101,6 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
     colors[i] = counters[colors[i]]++;
 #endif
 
-  if(A.Ac != 0)
   return 0;
 }
 
