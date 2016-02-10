@@ -18,6 +18,10 @@
 #include "Vector.hpp"
 #include "KokkosSetup.hpp"
 
+#ifdef SYMGS_COLOR
+#include "ColorSYMGS.hpp"
+#endif
+
 int ComputeSYMGS( const SparseMatrix  & A, const Vector & r, Vector & x);
 
 #endif // COMPUTESYMGS_HPP

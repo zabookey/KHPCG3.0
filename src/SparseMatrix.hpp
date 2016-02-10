@@ -74,7 +74,14 @@ struct Optimatrix_STRUCT{
   local_matrix_type localMatrix;
   global_matrix_type globalMatrix;
   local_int_1d_type matrixDiagonal; // values(matrixDiagonal(i)) will return value on diagonal of row i.
-  local_int_1d_type f2cOperator; // Use this instead of the one in MGData so it can be used in Kokkos kernels.
+  local_int_1d_type f2cOperator; // Use this instead of the one in MGData so it can be used in Kokkos kernels
+#ifdef SYMGS_COLOR
+  local_int_1d_type colors_ind; // View that in correspondance with colors_map says which rows are which color
+  host_local_int_1d_type host_colors_ind; // For easy access later, avoid copying
+  local_int_1d_type colors_map; // View that holds tha map for colors_ind
+  host_local_int_1d_type host_colors_map; // For easy access later, avoid copying
+  int numColors;
+#endif
 };
 typedef struct Optimatrix_STRUCT Optimatrix;
 /*!

@@ -21,6 +21,10 @@
 
 #include "KokkosSetup.hpp"
 
+#ifdef SYMGS_COLOR
+#include "Coloring.hpp"
+#endif
+
 int OptimizeProblem(SparseMatrix & A, CGData & data,  Vector & b, Vector & x, Vector & xexact);
 
 // This helper function should be implemented in a non-trivial way if OptimizeProblem is non-trivial

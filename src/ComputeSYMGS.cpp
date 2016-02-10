@@ -54,6 +54,9 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
     return ComputeSYMGS_ref(A, r, x);
   }
 
+#ifdef SYMGS_COLOR
+  return ColorSYMGS(A,r,x);
+#else
   Optimatrix * A_Optimized = (Optimatrix *)A.optimizationData;
   Optivector * r_Optimized = (Optivector *)r.optimizationData;
   Optivector * x_Optimized = (Optivector *)x.optimizationData;
@@ -105,5 +108,7 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
   }
   //Copy the updated x data on the host back to the device.
   Kokkos::deep_copy(x_values, host_x_values);
+
 	return(0);
+#endif
 }
