@@ -24,6 +24,9 @@
 #ifdef SYMGS_COLOR
 #include "Coloring.hpp"
 #endif
+#ifdef SYMGS_LEVEL
+#include "LevelScheduler.hpp"
+#endif
 
 int OptimizeProblem(SparseMatrix & A, CGData & data,  Vector & b, Vector & x, Vector & xexact);
 

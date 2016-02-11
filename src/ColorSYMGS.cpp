@@ -116,7 +116,6 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
 #ifndef HPCG_NOMPI
   ExchangeHalo(A,x);
 #endif
-
   Optimatrix* A_Optimized = (Optimatrix*)A.optimizationData;
   local_matrix_type localMatrix = A_Optimized->localMatrix;
   local_int_1d_type matrixDiagonal = A_Optimized->matrixDiagonal;

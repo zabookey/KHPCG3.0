@@ -1,3 +1,4 @@
+#ifdef SYMGS_COLOR
 #include "Coloring.hpp"
 
 class Coloring{
@@ -302,3 +303,4 @@ int doColoring(SparseMatrix & A){
 	if(A.Ac != 0) return doColoring(*A.Ac);
 	return(0);
 }
+#endif

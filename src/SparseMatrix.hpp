@@ -29,6 +29,9 @@
 #include "MGData.hpp"
 
 #include "KokkosSetup.hpp"
+#ifdef SYMGS_LEVEL
+#include "Levels.hpp"
+#endif
 
 struct SparseMatrix_STRUCT {
   char  * title; //!< name of the sparse matrix
@@ -82,6 +85,10 @@ struct Optimatrix_STRUCT{
   host_local_int_1d_type host_colors_map; // For easy access later, avoid copying
   int numColors;
 #endif
+#ifdef SYMGS_LEVEL
+  LevelScheduler * levels;
+#endif
+
 };
 typedef struct Optimatrix_STRUCT Optimatrix;
 /*!
@@ -221,7 +228,15 @@ inline void DeleteMatrix(SparseMatrix & A) {
 #endif
 
   if (A.geom!=0) { delete A.geom; A.geom = 0;}
-  if (A.optimizationData != 0) {delete (Optimatrix*) A.optimizationData; A.optimizationData = 0;}
+  if (A.optimizationData != 0) {
+#ifdef SYMGS_LEVEL
+    Optimatrix * A_Optimized = (Optimatrix*) A.optimizationData;
+    delete A_Optimized->levels; A_Optimized->levels = 0;
+    delete A_Optimized; A.optimizationData = 0;
+#else
+    delete (Optimatrix*) A.optimizationData; A.optimizationData = 0;
+#endif
+  }
   if (A.Ac!=0) { DeleteMatrix(*A.Ac); delete A.Ac; A.Ac = 0;} // Delete coarse matrix
   if (A.mgData!=0) { DeleteMGData(*A.mgData); delete A.mgData; A.mgData = 0;} // Delete MG data
   return;

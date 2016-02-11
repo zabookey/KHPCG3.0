@@ -6,7 +6,7 @@ set(SOURCES
   ExchangeHalo.cpp  finalize.cpp  GenerateCoarseProblem.cpp  GenerateGeometry.cpp  GenerateProblem.cpp  GenerateProblem_ref.cpp
   init.cpp  MixedBaseCounter.cpp mytimer.cpp  OptimizeProblem.cpp  ReadHpcgDat.cpp  ReportResults.cpp  SetupHalo.cpp  SetupHalo_ref.cpp
   TestCG.cpp  TestNorms.cpp  TestSymmetry.cpp  WriteProblem.cpp  YAML_Doc.cpp
-  YAML_Element.cpp  Coloring.cpp ColorSYMGS.cpp
+  YAML_Element.cpp  Coloring.cpp ColorSYMGS.cpp LevelScheduler.cpp LevelSYMGS.cpp
   )
 
 set(HEADERS
@@ -18,7 +18,7 @@ set(HEADERS
   GenerateProblem.hpp  GenerateProblem_ref.hpp Geometry.hpp  hpcg.hpp KokkosSetup.hpp  MGData.hpp  MixedBaseCounter.hpp mytimer.hpp
   OptimizeProblem.hpp  ReadHpcgDat.hpp  ReportResults.hpp  SetupHalo.hpp  SetupHalo_ref.hpp SparseMatrix.hpp  TestCG.hpp
   TestNorms.hpp  TestSymmetry.hpp  Vector.hpp  WriteProblem.hpp  YAML_Doc.hpp  YAML_Element.hpp
-  Coloring.hpp ColorSYMGS.hpp
+  Coloring.hpp ColorSYMGS.hpp Levels.hpp LevelScheduler.hpp LevelSYMGS.hpp
 	
   )
 

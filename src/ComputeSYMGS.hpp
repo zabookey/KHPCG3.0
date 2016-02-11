@@ -21,6 +21,9 @@
 #ifdef SYMGS_COLOR
 #include "ColorSYMGS.hpp"
 #endif
+#ifdef SYMGS_LEVEL
+#include "LevelSYMGS.hpp"
+#endif
 
 int ComputeSYMGS( const SparseMatrix  & A, const Vector & r, Vector & x);
 

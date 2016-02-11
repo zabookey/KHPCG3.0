@@ -40,13 +40,16 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
   // This function can be used to completely transform any part of the data structures.
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
 	OptimizeMatrix(A);
-  OptimizeCGData(data);
+  	OptimizeCGData(data);
 	OptimizeVector(b);
 	OptimizeVector(x);
 	OptimizeVector(xexact);
 
   #ifdef SYMGS_COLOR
     doColoring(A);
+  #endif
+  #ifdef SYMGS_LEVEL
+    levelSchedule(A);
   #endif
 
   return 0;

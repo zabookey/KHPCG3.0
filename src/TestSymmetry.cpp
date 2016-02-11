@@ -39,6 +39,9 @@ using std::endl;
 #include "SparseMatrix.hpp"
 #include "TestSymmetry.hpp"
 
+//TODO MAKE SURE THIS IS LEGAL!!!!
+#include "OptimizeProblem.hpp"
+
 /*!
   Tests symmetry-preserving properties of the sparse matrix vector multiply and
   symmetric Gauss-Siedel routines.
@@ -76,6 +79,10 @@ int TestSymmetry(SparseMatrix & A, Vector & b, Vector & xexact, TestSymmetryData
  // First load vectors with random values
  FillRandomVector(x_ncol);
  FillRandomVector(y_ncol);
+
+ OptimizeVector(x_ncol);
+ OptimizeVector(y_ncol);
+ OptimizeVector(z_ncol);
 
  double xNorm2, yNorm2;
  double ANorm = 2 * 26.0;
