@@ -78,7 +78,7 @@ int ComputeDotProduct(const local_int_t n, const Vector & x, const Vector & y,
   double local_result = 0.0;
   Kokkos::parallel_reduce(n,Dotproduct(x_values, y_values), local_result);
 
-  #ifndef HPCG_NOMPI
+  #ifndef HPCG_NO_MPI
     double t0  = mytimer();
     double global_result = 0.0;
     MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
