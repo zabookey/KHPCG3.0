@@ -128,6 +128,15 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
     niters = k;
   }
 
+  Optimatrix * A_Optimized = (Optimatrix *) A.optimizationData;
+  local_int_1d_type orig_rows = A_Optimized-> orig_rows;
+  Optivector * x_Optimized = (Optivector *) x.optimizationData;
+  double_1d_type x_values = x_Optimized->values;
+  double_1d_type x_copy = double_1d_type("", x_values.dimension_0());
+  for(int i = 0; i < x_values.dimension_0(); i++)
+    x_copy(orig_rows(i)) = x_values(i);
+  x_values = x_copy;
+	x_Optimized->values = x_values;
   // Store times
   times[1] += t1; // dot-product time
   times[2] += t2; // WAXPBY time

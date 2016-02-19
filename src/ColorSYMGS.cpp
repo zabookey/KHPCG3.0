@@ -22,9 +22,11 @@ KOKKOS_INLINE_FUNCTION
   void operator()(const team_member & teamMember) const{
     int ii = teamMember.league_rank() * teamMember.team_size() + teamMember.team_rank() + color_set_begin;
     if(ii >= color_set_end) return;
-
-	int crow = colors_ind(ii);
-
+#ifdef REORDER
+		int crow = ii;//colors_ind(ii);
+#else
+		int crow = colors_ind(ii);
+#endif
     int row_begin = A.graph.row_map(crow);
     int row_end = A.graph.row_map(crow+1);
 

@@ -23,6 +23,9 @@
 
 #ifdef SYMGS_COLOR
 #include "Coloring.hpp"
+#ifdef REORDER
+#include "ColorReorder.hpp"
+#endif
 #endif
 #ifdef SYMGS_LEVEL
 #include "LevelScheduler.hpp"

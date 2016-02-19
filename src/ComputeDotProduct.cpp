@@ -62,6 +62,7 @@ int ComputeDotProduct(const local_int_t n, const Vector & x, const Vector & y,
     double & result, double & time_allreduce, bool & isOptimized) {
   
     if(x.optimizationData == 0 || y.optimizationData == 0){
+			std::cout<<"OPT DOT CALLED REF DOT"<<std::endl;
       isOptimized = false;
       return(ComputeDotProduct_ref(n,x,y,result,time_allreduce));
     }

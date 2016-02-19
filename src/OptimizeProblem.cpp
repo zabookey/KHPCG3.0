@@ -47,6 +47,15 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
 
   #ifdef SYMGS_COLOR
     doColoring(A);
+  #ifdef REORDER
+    ColorReorder(A,x,b);
+    SparseMatrix * curMatrix = &A;
+    while(curMatrix->Ac != 0){
+    	ColorReorder(*curMatrix->Ac, *curMatrix->mgData->rc, *curMatrix->mgData->xc);
+    	curMatrix = curMatrix->Ac;
+    }
+
+  #endif
   #endif
   #ifdef SYMGS_LEVEL
     levelSchedule(A);

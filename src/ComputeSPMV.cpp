@@ -41,6 +41,7 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 
   // This line and the next two lines should be removed and your version of ComputeSPMV should be used.
   if(A.optimizationData == 0 || x.optimizationData == 0 || y.optimizationData == 0){
+		std::cout<<"OPT SPMV CALLED REF SPMV"<<std::endl;
     A.isSpmvOptimized = false;
     return ComputeSPMV_ref(A,x,y);
   }

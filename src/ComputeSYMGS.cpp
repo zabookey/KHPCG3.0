@@ -51,6 +51,7 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 
   // This line and the next two lines should be removed and your version of ComputeSYMGS should be used.
   if(A.optimizationData == 0 || r.optimizationData == 0 || x.optimizationData == 0){
+		std::cout<<"OPT SYMGS CALLED REF SYMGS"<<std::endl;
     return ComputeSYMGS_ref(A, r, x);
   }
 

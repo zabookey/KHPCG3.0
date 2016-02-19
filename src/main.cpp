@@ -115,7 +115,7 @@ int main(int argc, char * argv[]) {
   // Problem setup Phase //
   /////////////////////////
 
-
+std::cout << "Problem setup Phase" << std::endl;
 
 #ifdef HPCG_DEBUG
   double t1 = mytimer();
@@ -171,7 +171,7 @@ int main(int argc, char * argv[]) {
   ////////////////////////////////////
   // Reference SpMV+MG Timing Phase //
   ////////////////////////////////////
-
+std::cout<<"Reference SpMV+MG Timing Phase"<< std::endl;
   // Call Reference SpMV and MG. Compute Optimization time as ratio of times in these routines
 
   local_int_t nrow = A.localNumberOfRows;
@@ -203,7 +203,7 @@ int main(int argc, char * argv[]) {
   ///////////////////////////////
   // Reference CG Timing Phase //
   ///////////////////////////////
-
+std::cout<<"Reference CG Timing Phase"<<std::endl;
 #ifdef HPCG_DEBUG
   t1 = mytimer();
 #endif
@@ -228,7 +228,7 @@ int main(int argc, char * argv[]) {
   }
   if (rank == 0 && err_count) HPCG_fout << err_count << " error(s) in call(s) to reference CG." << endl;
   double refTolerance = normr / normr0;
-
+std::cout<<"Optimize Problem"<<std::endl;
   // Call user-tunable set up function.
   double t7 = mytimer();
   OptimizeProblem(A, data, b, x, xexact);
@@ -246,7 +246,7 @@ int main(int argc, char * argv[]) {
   //////////////////////////////
   // Validation Testing Phase //
   //////////////////////////////
-
+std::cout <<"Validation Testing Phase"<< std::endl;
 #ifdef HPCG_DEBUG
   t1 = mytimer();
 #endif
@@ -268,7 +268,7 @@ int main(int argc, char * argv[]) {
   //////////////////////////////
   // Optimized CG Setup Phase //
   //////////////////////////////
-
+std::cout<<"Optimized CG Setup Phase"<<std::endl;
   niters = 0;
   normr = 0.0;
   normr0 = 0.0;
@@ -313,7 +313,7 @@ int main(int argc, char * argv[]) {
   ///////////////////////////////
   // Optimized CG Timing Phase //
   ///////////////////////////////
-
+std::cout<<"Optimized CG Timing Phase"<<std::endl;
   // Here we finally run the benchmark phase
   // The variable total_runtime is the target benchmark execution time in seconds
 
@@ -358,7 +358,7 @@ int main(int argc, char * argv[]) {
   ////////////////////
   // Report Results //
   ////////////////////
-
+std::cout<<"Report Results"<<std::endl;
   // Report results to YAML file
   ReportResults(A, numberOfMgLevels, numberOfCgSets, refMaxIters, optMaxIters, &times[0], testcg_data, testsymmetry_data, testnorms_data, global_failure, quickPath);
 

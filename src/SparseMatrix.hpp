@@ -84,6 +84,10 @@ struct Optimatrix_STRUCT{
   local_int_1d_type colors_map; // View that holds tha map for colors_ind
   host_local_int_1d_type host_colors_map; // For easy access later, avoid copying
   int numColors;
+#ifdef REORDER
+  local_int_1d_type orig_rows; // View that holds information to return to original rows. orig(i) = j current row i was row j
+  local_int_1d_type row_dest; // View that holds where each row went. orig(i) = j dest(j) = i
+#endif
 #endif
 #ifdef SYMGS_LEVEL
   LevelScheduler * levels;
