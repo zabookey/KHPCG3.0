@@ -5,6 +5,61 @@
 
 #include <iostream>
 
+class PermuteRow{
+public:
+	local_matrix_type localMatrix;
+	values_type newValues;
+	local_index_type newIndices;
+	int old_row_start;
+	int new_row_start;
+
+	PermuteRow(const local_matrix_type & localMatrix_, values_type & newValues_, local_index_type & newIndices_,
+		const int old_row_start_, const int new_row_start_):
+		localMatrix(localMatrix_), newValues(newValues_), newIndices(newIndices_),
+		old_row_start(old_row_start_), new_row_start(new_row_start_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		newValues(new_row_start + i) = localMatrix.values(old_row_start + i);
+		newIndices(new_row_start + i) = localMatrix.graph.entries(old_row_start + i);
+	}
+};
+
+class PermuteColumn{
+public:
+	local_int_1d_type row_dest;
+	local_index_type newIndices;
+
+	PermuteColumn(const local_int_1d_type & row_dest_, local_index_type &newIndices_):
+		row_dest(row_dest_), newIndices(newIndices_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		newIndices(i) = row_dest(newIndices(i));
+	}
+};
+
+class UpdateDiagonal{
+public:
+	local_int_1d_type new_diag;
+	row_map_type newRowMap;
+	local_index_type newIndices;
+
+	UpdateDiagonal(local_int_1d_type & new_diag_, const row_map_type & newRowMap_, const local_index_type & newIndices_):
+		new_diag(new_diag_), newRowMap(newRowMap_), newIndices(newIndices_){}
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(const int & i) const{
+		for(int j = newRowMap(i); j < newRowMap(i+1); j++){
+			if(newIndices(j) == i){
+				new_diag(i) = j;
+				break;
+			}
+		}
+	}
+
+};
+
 /*
  * This function reorders our problem based on the colors the matrix is given
  * This should increase performance in ColorSYMGS by increasing cache locality?
@@ -24,11 +79,14 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 	double_1d_type b_values = b_Optimized->values;
 	//WHOO!!!! BABY STEPS!
 	std::cout<<"REORDERING..." << std::endl;
-	host_values_type newValues = Kokkos::create_mirror(localMatrix.values);
-	host_local_index_type newIndices = Kokkos::create_mirror(localMatrix.graph.entries);
-	host_non_const_row_map_type newRowMap = Kokkos::create_mirror(localMatrix.graph.row_map); // ASSUME THIS SETS IT TO ALL 0's
-	host_double_1d_type newX = Kokkos::create_mirror(x_values);
-	host_double_1d_type newB = Kokkos::create_mirror(b_values);
+	values_type newValues("New Values on Device", localMatrix.values.dimension_0());
+	local_index_type newIndices("New entries on Device", localMatrix.graph.entries.dimension_0());
+	non_const_row_map_type newRowMap("New RowMap on Device", localMatrix.graph.row_map.dimension_0());
+	host_non_const_row_map_type host_newRowMap = Kokkos::create_mirror_view(newRowMap); // ASSUME THIS SETS IT TO ALL 0's
+	double_1d_type newX("New X_values on Device", x_values.dimension_0());
+	host_double_1d_type host_newX = Kokkos::create_mirror_view(newX);
+	double_1d_type newB("New B values on Device", b_values.dimension_0());
+	host_double_1d_type host_newB = Kokkos::create_mirror_view(newB);
 	local_int_1d_type orig_rows = local_int_1d_type("Original row indices", A.localNumberOfRows);
 	host_local_int_1d_type host_orig_rows = Kokkos::create_mirror_view(orig_rows);
 	local_int_1d_type row_dest = local_int_1d_type("Row Destinatinos", A.localNumberOfRows); //row_dest(i) = old row i's new location
@@ -45,28 +103,40 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 			local_int_t old_row_start = localMatrix.graph.row_map(currentRow);
 			local_int_t old_row_end = localMatrix.graph.row_map(currentRow+1);
 			local_int_t nnzInRow = old_row_end - old_row_start; //Mark how many nonzeros are in the row we're about to move
-			local_int_t new_row_start = newRowMap(destinationRow);
+			local_int_t new_row_start = host_newRowMap(destinationRow);
 			// Innermost loop iterates through the values in the row
 			//TODO This loop can and should be done in parallel
+			/*
 			for(local_int_t k = 0; k < old_row_end - old_row_start; k++){
 				newValues(new_row_start + k) = localMatrix.values(k + old_row_start);
 				newIndices(new_row_start + k) = localMatrix.graph.entries(k + old_row_start);
 			}
+			*/
+			Kokkos::parallel_for(old_row_end - old_row_start, PermuteRow(localMatrix, newValues, newIndices, old_row_start, new_row_start));
 			//RHS may need to be mirrors instead of actual view
-			newX(destinationRow) = x_values(currentRow);
-			newB(destinationRow) = b_values(currentRow);
+			host_newX(destinationRow) = x_values(currentRow);
+			host_newB(destinationRow) = b_values(currentRow);
 			host_orig_rows(destinationRow) = currentRow; // Mark which row of this was the original so we can return it later.
 			host_row_dest(currentRow) = destinationRow;
 			//Prepare newRowMap for the next iteration
-			newRowMap(destinationRow+1) = newRowMap(destinationRow) + nnzInRow;
+			host_newRowMap(destinationRow+1) = host_newRowMap(destinationRow) + nnzInRow;
 			//Increment destination so we continue to fill our new mappings
 			destinationRow++;
 		}
 	}
+	Kokkos::deep_copy(newRowMap, host_newRowMap);
+	Kokkos::deep_copy(row_dest, host_row_dest);
+	Kokkos::deep_copy(orig_rows, host_orig_rows);
+	Kokkos::deep_copy(newX, host_newX);
+	Kokkos::deep_copy(newB, host_newB);
 	//This will permute the columns to help us maintain symmetry.
+	/*
 	for(int i = 0; i < newIndices.dimension_0(); i++)
 		newIndices(i) = host_row_dest(newIndices(i));
-	local_int_1d_type new_diag = local_int_1d_type("New Diagonal", A.localNumberOfRows);
+	*/
+	Kokkos::parallel_for(newIndices.dimension_0(), PermuteColumn(row_dest, newIndices));
+	local_int_1d_type new_diag("New Diagonal", A.localNumberOfRows);
+	/*
 	for(int i = 0; i < A.localNumberOfRows; i++){
 		for(int j = newRowMap(i); j < newRowMap(i+1); j++){
 			if(newIndices(j) == i){
@@ -74,27 +144,17 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 				break;
 			}
 		}
-		if(i == A.localNumberOfRows -1) std::cout<<"Diagonal redone"<<std::endl;
 	}
+	*/
+	Kokkos::parallel_for(A.localNumberOfRows, UpdateDiagonal(new_diag, newRowMap, newIndices));
 	A_Optimized->matrixDiagonal = new_diag;
-	double_1d_type reordered_x_values = double_1d_type("Reordered x", newX.dimension_0());
-	Kokkos::deep_copy(reordered_x_values, newX);
-	double_1d_type reordered_b_values = double_1d_type("Reordered b", newB.dimension_0());
-	Kokkos::deep_copy(reordered_b_values, newB);
-	x_values = reordered_x_values;
-	//b_values = reordered_b_values;
-	Kokkos::deep_copy(orig_rows, host_orig_rows);
 	A_Optimized->orig_rows = orig_rows;
-	values_type newV = values_type("New Values on Device", newValues.dimension_0());
-	local_index_type newI = local_index_type("New Indices on Device", newIndices.dimension_0());
-	non_const_row_map_type newR = non_const_row_map_type("New Row Map on device", newRowMap.dimension_0());
-	Kokkos::deep_copy(newV, newValues);
-	Kokkos::deep_copy(newI, newIndices);
-	Kokkos::deep_copy(newR, newRowMap);
-	local_matrix_type reordered_matrix = local_matrix_type("Matrix: Reordered", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros, newV, newR, newI);
+	A_Optimized->row_dest = row_dest;
+	local_matrix_type reordered_matrix = local_matrix_type("Matrix: Reordered", A.localNumberOfRows, A.localNumberOfRows, A.localNumberOfNonzeros,
+		newValues, newRowMap, newIndices);
 	A_Optimized->localMatrix = reordered_matrix;
-	x_Optimized->values = reordered_x_values;
-	b_Optimized->values = reordered_b_values;
+	x_Optimized->values = newX;
+	b_Optimized->values = newB;
 	//Kokkos::deep_copy(b_values, newB);
 	//Kokkos::deep_copy(x_values, newX);
 	//Kokkos::deep_copy(A.globalMatrix.values, newValues);
