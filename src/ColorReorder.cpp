@@ -69,14 +69,20 @@ public:
 int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 	Optimatrix* A_Optimized = (Optimatrix *) A.optimizationData;
 	local_matrix_type localMatrix = A_Optimized->localMatrix;
+	host_row_map_type host_row_map = Kokkos::create_mirror_view(localMatrix.graph.row_map);
+	Kokkos::deep_copy(host_row_map, localMatrix.graph.row_map);
 	local_int_1d_type matrixDiagonal = A_Optimized->matrixDiagonal;
 	int numColors = A_Optimized->numColors;
 	host_local_int_1d_type host_colors_map = A_Optimized->host_colors_map;
 	host_local_int_1d_type host_colors_ind = A_Optimized->host_colors_ind;
 	Optivector * x_Optimized = (Optivector *) x.optimizationData;
 	double_1d_type x_values = x_Optimized->values;
+	host_double_1d_type host_x_values = Kokkos::create_mirror_view(x_values);
+	Kokkos::deep_copy(host_x_values, x_values);
 	Optivector * b_Optimized = (Optivector *) b.optimizationData;
 	double_1d_type b_values = b_Optimized->values;
+	host_double_1d_type host_b_values = Kokkos::create_mirror_view(b_values);
+	Kokkos::deep_copy(host_b_values, b_values);
 	//WHOO!!!! BABY STEPS!
 	std::cout<<"REORDERING..." << std::endl;
 	values_type newValues("New Values on Device", localMatrix.values.dimension_0());
@@ -100,8 +106,8 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 		for(local_int_t j = begin; j < end; j++){
 			//Move Matrix Row
 			local_int_t currentRow = host_colors_ind(j);
-			local_int_t old_row_start = localMatrix.graph.row_map(currentRow);
-			local_int_t old_row_end = localMatrix.graph.row_map(currentRow+1);
+			local_int_t old_row_start = host_row_map(currentRow);
+			local_int_t old_row_end = host_row_map(currentRow+1);
 			local_int_t nnzInRow = old_row_end - old_row_start; //Mark how many nonzeros are in the row we're about to move
 			local_int_t new_row_start = host_newRowMap(destinationRow);
 			// Innermost loop iterates through the values in the row
@@ -114,8 +120,8 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 			*/
 			Kokkos::parallel_for(old_row_end - old_row_start, PermuteRow(localMatrix, newValues, newIndices, old_row_start, new_row_start));
 			//RHS may need to be mirrors instead of actual view
-			host_newX(destinationRow) = x_values(currentRow);
-			host_newB(destinationRow) = b_values(currentRow);
+			host_newX(destinationRow) = host_x_values(currentRow);
+			host_newB(destinationRow) = host_b_values(currentRow);
 			host_orig_rows(destinationRow) = currentRow; // Mark which row of this was the original so we can return it later.
 			host_row_dest(currentRow) = destinationRow;
 			//Prepare newRowMap for the next iteration
@@ -160,5 +166,6 @@ int ColorReorder(SparseMatrix & A, Vector & x, Vector & b){
 	//Kokkos::deep_copy(A.globalMatrix.values, newValues);
 	//Kokkos::deep_copy(A.globalMatrix.graph.entries, newIndices);
 	//Kokkos::deep_copy(A.globalMatrix.graph.row_map, newRowMap);
+	return(0);
 }
 #endif
