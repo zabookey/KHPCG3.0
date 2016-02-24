@@ -36,6 +36,21 @@
 #define TICK()  t0 = mytimer() //!< record current time in 't0'
 #define TOCK(t) t += mytimer() - t0 //!< store time difference in 't' using time in 't0'
 
+class PermuteX{
+public:
+  local_int_1d_type orig_rows;
+  double_1d_type x_copy;
+  double_1d_type x_values;
+
+  PermuteX(local_int_1d_type & orig_rows_, double_1d_type & x_copy_, double_1d_type x_values_):
+    orig_rows(orig_rows_), x_copy(x_copy_), x_values(x_values_){}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int & i) const{
+    x_copy(orig_rows(i)) = x_values(i);
+  }
+};
+
 /*!
   Routine to compute an approximate solution to Ax = b
 
@@ -133,8 +148,11 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
   Optivector * x_Optimized = (Optivector *) x.optimizationData;
   double_1d_type x_values = x_Optimized->values;
   double_1d_type x_copy = double_1d_type("", x_values.dimension_0());
+  /*
   for(int i = 0; i < x_values.dimension_0(); i++)
     x_copy(orig_rows(i)) = x_values(i);
+  */
+  Kokkos::parallel_for(x_values.dimension_0(), PermuteX(orig_rows, x_copy, x_values));
   //for(int i = 0; i < 10; i++)
   //  std::cout<<"Px("<<i<<") = "<<x_values(i)<< "    x("<<i<<") = "<<x_copy(i)<<std::endl;
   x_values = x_copy;
