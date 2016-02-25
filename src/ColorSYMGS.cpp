@@ -71,7 +71,11 @@ class colouredForwardSweep{
 
 KOKKOS_INLINE_FUNCTION
   void operator()(const int & i)const{
+#ifdef REORDER
+		local_int_t currentRow = colors_row + i;
+#else
     local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
+#endif
     int start = A.graph.row_map(currentRow);
     int end = A.graph.row_map(currentRow+1);
     const double currentDiagonal = A.values(matrixDiagonal(currentRow));
@@ -99,7 +103,11 @@ class colouredBackSweep{
       matrixDiagonal(matrixDiagonal_) {}
 KOKKOS_INLINE_FUNCTION
   void operator()(const int & i)const{
+#ifdef REORDER
+		local_int_t currentRow = colors_row + i;
+#else
     local_int_t currentRow = colors_ind(colors_row + i); // This should tell us what row we're doing SYMGS on.
+#endif
     int start = A.graph.row_map(currentRow);
     int end = A.graph.row_map(currentRow+1);
     const double currentDiagonal = A.values(matrixDiagonal(currentRow));
@@ -135,7 +143,7 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
 
 	 // Forward Sweep!
 #ifdef KOKKOS_TEAM
-  int vector_size = 64;
+  int vector_size = 32;
   int teamSizeMax = 8;
   for(int i = 0; i < numColors; i++){
     int color_index_begin = host_colors_map(i);
