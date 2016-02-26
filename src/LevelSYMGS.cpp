@@ -196,7 +196,7 @@ class leveledBackSweep{
 int LevelSYMGS( const SparseMatrix & A, const Vector & r, Vector & x){
 assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space for halo values
 
-#ifndef HPCG_NOMPI
+#ifndef HPCG_NO_MPI
   ExchangeHalo(A,x);
 #endif
   Optimatrix * A_Optimized = (Optimatrix*) A.optimizationData;

@@ -48,7 +48,7 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
   assert(x.localLength >= A.localNumberOfColumns);
   assert(y.localLength >= A.localNumberOfRows);
 
-  #ifndef HPCG_NOMPI
+  #ifndef HPCG_NO_MPI
     ExchangeHalo(A,x);
   #endif
 
