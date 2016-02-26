@@ -157,7 +157,7 @@ int levelSchedule(SparseMatrix & A){
 	levels->b_lev_map = Kokkos::create_mirror_view(b_lev_map);
 	Kokkos::deep_copy(levels->b_lev_map, b_lev_map);
 	A_Optimized->levels = levels;
-	std::cout<<"F: "<< f_numberOfLevels << " B: "<<b_numberOfLevels << std::endl;
+	//std::cout<<"F: "<< f_numberOfLevels << " B: "<<b_numberOfLevels << std::endl;
 	if(A.Ac != 0) return(levelSchedule(*A.Ac));
 	else return(0);
 

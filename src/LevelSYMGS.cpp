@@ -221,18 +221,20 @@ assert(x.localLength == A.localNumberOfColumns); // Make sure x contains space f
   double_1d_type z("z", x_values.dimension_0());
 #ifdef KOKKOS_TEAM
   const int row_per_team=256;
+  const int vector_size = 32;
+  const int team_size_max = 32;
   for(int i = 0; i < f_numLevels; i++){  
     const int numrows = f_lev_map(i+1) - f_lev_map(i);
     const int numTeams = (numrows+row_per_team-1)/row_per_team;
-    const team_policy policy(numTeams, 1, 16);
+    const team_policy policy(numTeams, team_size_max, vector_size);
     Kokkos::parallel_for(policy, leveledForwardSweep(f_lev_map(i), f_lev_ind, 
       localMatrix, r_values, z, matrixDiagonal, A.localNumberOfRows, row_per_team));
   }
   Kokkos::parallel_for(z.dimension_0(), applyD(localMatrix, matrixDiagonal, z));
   for(int i = 0; i < b_numLevels; i++){
-    const int numrows = b_lev_map(i+1) - f_lev_map(i);
+    const int numrows = b_lev_map(i+1) - b_lev_map(i);
     const int numTeams = (numrows+row_per_team-1)/row_per_team;
-    const team_policy policy(numTeams, 1, 16);
+    const team_policy policy(numTeams, team_size_max, vector_size);
     Kokkos::parallel_for(policy, leveledBackSweep(b_lev_map(i), b_lev_ind,
       localMatrix, z, x_values, matrixDiagonal, A.localNumberOfRows, row_per_team));
   }
