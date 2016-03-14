@@ -87,10 +87,12 @@ inline void ScaleVectorValue(Vector & v, local_int_t index, double value) {
 	if(v.optimizationData != 0){
 		Optivector * v_Optimized = (Optivector *) v.optimizationData;
 		double_1d_type v_values = v_Optimized->values;
-		host_double_1d_type host_v_values = Kokkos::create_mirror_view(v_values);
-		Kokkos::deep_copy(host_v_values, v_values);
-		host_v_values(index) *= value;
-		Kokkos::deep_copy(v_values, host_v_values);
+		double_1d_type v_sub;
+		v_sub = Kokkos::subview(v_values, std::make_pair(index, index+1));
+		host_double_1d_type host_v_sub = Kokkos::create_mirror_view(v_sub);
+		Kokkos::deep_copy(host_v_sub, v_sub);
+		host_v_sub(0) *= value;
+		Kokkos::deep_copy(v_sub, host_v_sub);
 	}
   return;
 }
